@@ -212,13 +212,45 @@
 
   .sticky-bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--hair); }
 
+  /* Ambient cursor glow over a faint blueprint grid. Pure decoration, no layout impact. */
+  #cursor-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(560px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 106, 61, 0.16), transparent 60%),
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 42px 42px,
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px) 0 0 / 42px 42px;
+  }
+  #root { position: relative; z-index: 1; }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
+    #cursor-glow { background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px); }
   }
 </style>
 </head>
 <body>
+<div id="cursor-glow"></div>
 <div id="root"></div>
+
+<script>
+  (function () {
+    var glow = document.getElementById('cursor-glow');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+    var raf = null;
+    window.addEventListener('mousemove', function (e) {
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        glow.style.setProperty('--mx', e.clientX + 'px');
+        glow.style.setProperty('--my', e.clientY + 'px');
+        raf = null;
+      });
+    }, { passive: true });
+  })();
+</script>
 
 <script type="module">
 import { html, render, useState, useMemo } from 'https://esm.sh/htm/preact/standalone';
