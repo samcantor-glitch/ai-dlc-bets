@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The AI-DLC Bang for the Buck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* Civic Modern tokens — mirrored from gp-portal tokens.jsx
+     If a value moves there, move it here. Never patch downstream. */
+  :root {
+    /* Color: surfaces */
+    --bg: #0B0B0C;
+    --paper: #17171A;
+    --surfaceHi: #1F1F23;
+
+    /* Color: lines */
+    --hair: #2A2A2E;
+    --strong: #3D3D42;
+
+    /* Color: text */
+    --text: #F5F5F3;
+    --body: #C9C9CC;
+    --muted: #A8A8AE;
+    --dim: #7A7A80;
+
+    /* Color: action — RESERVED for the one CTA / focus ring */
+    --action: #FF6A3D;
+    --action-hi: #FF8A63;
+    --action-soft: #2B160E;
+
+    /* Color: status (passive only) */
+    --err: #FF6961;
+
+    /* Type */
+    --font-sans: 'Figtree', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+    /* Radius */
+    --r-xs: 4px;
+    --r-md: 8px;
+
+    /* Spacing (reference; Tailwind handles emit) */
+  }
+
+  html, body, #root { background: var(--bg); color: var(--text); font-family: var(--font-sans); }
+  body { font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+  /* Atoms — CSS for components that aren't trivially Tailwindable */
+
+  .micro {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .section-head {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+    padding-top: 8px;
+    padding-bottom: 4px;
+  }
+
+  .id-chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--dim);
+    letter-spacing: 0.02em;
+  }
+
+  .hair { background: var(--hair); height: 1px; width: 100%; }
+
+  .field-label { font-size: 16px; font-weight: 500; color: var(--text); display: block; margin-bottom: 8px; }
+  .field-help { font-size: 14px; color: var(--muted); margin-top: 6px; }
+  .field-err { font-size: 14px; color: var(--err); margin-top: 6px; }
+
+  .control {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--strong);
+    border-radius: var(--r-xs);
+    padding: 12px 16px;
+    transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+    min-height: 44px;
+  }
+  .control:hover:not(:focus) { border-color: var(--text); }
+  .control:focus { outline: none; border-color: var(--action); box-shadow: 0 0 0 1px var(--action); }
+  .control[aria-invalid="true"] { border-width: 2px; border-color: var(--err); padding: 11px 15px; }
+  .control[aria-invalid="true"]:focus { box-shadow: 0 0 0 1px var(--err); }
+  select.control { appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238B8B90'><path d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z'/></svg>"); background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; padding-right: 44px; }
+
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1;
+    border-radius: var(--r-xs);
+    padding: 14px 22px;
+    min-height: 44px;
+    cursor: pointer;
+    transition: background 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+  }
+  .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--action); }
+  .btn-primary { background: var(--action); color: #fff; border: 1px solid var(--action); }
+  .btn-primary:hover:not(:disabled) { background: var(--action-hi); border-color: var(--action-hi); }
+  .btn-primary:disabled { background: var(--strong); border-color: var(--strong); cursor: not-allowed; }
+  .btn-tertiary { background: transparent; color: var(--muted); border: 1px solid transparent; padding: 14px 12px; }
+  .btn-tertiary:hover { color: var(--text); }
+
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--hair);
+    border-radius: var(--r-md);
+    padding: 20px;
+    transition: border-color 150ms ease-out, background 150ms ease-out;
+  }
+  .card:hover { border-color: var(--strong); }
+  .card[data-picked="true"] { border-color: var(--text); background: var(--paper); }
+  .card[data-disabled="true"] { opacity: 0.45; }
+  .card[data-disabled="true"]:hover { border-color: var(--hair); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    background: var(--surfaceHi);
+    color: var(--body);
+  }
+  .pill[data-tone="picked"] { background: var(--text); color: #fff; }
+
+  .stepper {
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--strong);
+    border-radius: var(--r-xs);
+    overflow: hidden;
+    background: var(--bg);
+    font-family: var(--font-mono);
+  }
+  .stepper button {
+    width: 32px;
+    min-height: 32px;
+    background: var(--bg);
+    border: none;
+    color: var(--text);
+    font-size: 16px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    transition: background 150ms ease-out;
+  }
+  .stepper button:hover:not(:disabled) { background: var(--surfaceHi); }
+  .stepper button:disabled { color: var(--dim); cursor: not-allowed; }
+  .stepper button:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--action); }
+  .stepper .count {
+    min-width: 32px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    border-left: 1px solid var(--hair);
+    border-right: 1px solid var(--hair);
+  }
+
+  .learn-more {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--action);
+    cursor: pointer;
+    min-height: 32px;
+  }
+  .learn-more:hover { color: var(--action-hi); }
+  .learn-more:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--action); border-radius: 2px; }
+
+  .why-block { border-top: 1px solid var(--hair); padding-top: 16px; margin-top: 16px; }
+
+  /* Display sizes — Civic Modern scale */
+  .t-h1 { font-size: 40px; line-height: 1.2; font-weight: 500; letter-spacing: -0.04em; color: var(--text); }
+  .t-h3 { font-size: 24px; line-height: 1.3; font-weight: 500; letter-spacing: -0.01em; color: var(--text); }
+  .t-h4 { font-size: 18px; line-height: 1.4; font-weight: 500; color: var(--text); }
+  .t-body { font-size: 16px; line-height: 1.5; color: var(--body); }
+  .t-bodySm { font-size: 14px; line-height: 1.5; color: var(--body); }
+  .t-caption { font-size: 12px; line-height: 1.4; color: var(--muted); }
+
+  .price-num { font-family: var(--font-mono); font-weight: 500; font-size: 18px; color: var(--text); letter-spacing: -0.01em; }
+  .price-num-lg { font-family: var(--font-mono); font-weight: 500; font-size: 32px; color: var(--text); letter-spacing: -0.02em; }
+
+  .sticky-bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--hair); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="module">
+import { html, render, useState, useMemo } from 'https://esm.sh/htm/preact/standalone';
+
+// === CONFIG ===========================================================
+const ENDPOINT = "REPLACE_WITH_APPS_SCRIPT_WEB_APP_URL";
+const BUDGET = 100;
+// =====================================================================
+
+const BETS = [
+  {
+    id: "D02", section: "Planning",
+    name: "Plan alongside an AI agent, before work starts",
+    price: 30,
+    desc: "The team works from a shared steering document and plans with an AI agent to nail down requirements and shape before anyone touches code.",
+    summary: "Nobody's running this yet. Worth piloting on one team before it spreads.",
+    impact: [
+      { role: "Engineering", text: "You get a sharper starting point before you write a line of code." },
+      { role: "PM", text: "The agent asks the questions you'd usually have to remember to ask." },
+      { role: "QA", text: "Edge cases and acceptance criteria get named earlier, when they're cheap to fix." },
+    ],
+  },
+  {
+    id: "D03", section: "Planning",
+    name: "Weekly pairing instead of a monthly hackathon",
+    price: 20,
+    desc: "Pair two engineers for a block of time, same day every week. No demo, no room, no audience required.",
+    summary: "Lower ceremony than a monthly hackathon, and easier to actually sustain.",
+    impact: [
+      { role: "Engineering", text: "Regular knowledge sharing without the overhead of organizing an event." },
+      { role: "PM", text: "Fewer single points of failure on the tricky parts of the codebase." },
+      { role: "QA", text: "More engineers understand the same code, so fixes don't bottleneck on one person." },
+    ],
+  },
+  {
+    id: "D04", section: "Grooming, refinement, specs",
+    name: "Shared skills for specs, epics, and tickets",
+    price: 40,
+    desc: "Give the org shared skills so specs, epics, and stories come out the same shape. Force the call on whether a ticket is written for a human or an agent to read. Build in a constraints section by codebase type and a named verification artifact before work starts.",
+    summary: "If a ticket can't say how it'll be verified, it isn't ready. This makes that a structural rule, not a hope.",
+    impact: [
+      { role: "Engineering", text: "Consistent ticket shape means less time guessing what done means." },
+      { role: "PM", text: "Every ticket you write comes out the same shape, no matter who wrote it." },
+      { role: "QA", text: "Verification is named before work starts, so you're not inventing a test plan after the fact." },
+    ],
+  },
+  {
+    id: "D24", section: "Grooming, refinement, specs",
+    name: "Definition of Ready enforced by a bot",
+    price: 30,
+    desc: "A ticket can't enter a sprint until an agent confirms it has a named verification artifact, scope boundaries, and a human-or-agent designation. The DoD gate you already run, applied at the other end of the pipeline.",
+    summary: "Bad tickets get caught before sprint planning, not discovered mid-sprint once it's expensive to push back.",
+    impact: [
+      { role: "Engineering", text: "You stop pulling tickets that turn out to be half-specified once you're already in them." },
+      { role: "PM", text: "Your tickets get checked against a real bar before they're committed to, not just skimmed in grooming." },
+      { role: "QA", text: "Verification is already named when the ticket lands on your desk, not invented after the fact." },
+    ],
+  },
+  {
+    id: "D05", section: "Grooming, refinement, specs",
+    name: "AI interviews every ticket before work starts",
+    price: 40,
+    desc: "An agent with real repo access grills every ticket on scope, edge cases, and tradeoffs, and flags what it already sees coming in the codebase. Grooming stops being once a sprint and starts running constantly.",
+    summary: "Example: a add-CSV-export ticket comes back flagging three existing export patterns and asks which one to follow, before anyone writes code.",
+    impact: [
+      { role: "Engineering", text: "Ambiguity gets caught before you start building, not during code review." },
+      { role: "PM", text: "Your tickets get a second set of eyes automatically, without adding a meeting." },
+      { role: "QA", text: "Edge cases the ticket missed show up before the feature ships, not after." },
+    ],
+  },
+  {
+    id: "D06", section: "Grooming, refinement, specs",
+    name: "Whole-team elaboration on one big project",
+    price: 30,
+    desc: "Swap one grooming session for a session where dev, product, QA, and design elaborate on one big project together, instead of grooming a stack of small tickets.",
+    summary: "Better for the projects that are big enough to need everyone in the room at once.",
+    impact: [
+      { role: "Engineering", text: "You hear product and QA's concerns before you're deep into the build." },
+      { role: "PM", text: "Shared understanding forms once, instead of getting re-explained ticket by ticket." },
+      { role: "QA", text: "You're in the room early enough to shape the test plan, not just react to one." },
+    ],
+  },
+  {
+    id: "D07", section: "Grooming, refinement, specs",
+    name: "Story-map epics together, agent drafts the leaf stories",
+    price: 30,
+    desc: "The team maps the epic together. An agent fills in the leaf-level stories from that shared map.",
+    summary: "Keeps the conversation where it matters and hands the mechanical part to the agent.",
+    impact: [
+      { role: "Engineering", text: "Less time writing boilerplate stories, more time on the shape of the epic." },
+      { role: "PM", text: "You focus your energy on the map, not on typing out every leaf story." },
+      { role: "QA", text: "Leaf stories inherit context from the shared map, so they're less likely to miss something." },
+    ],
+  },
+  {
+    id: "D08", section: "Grooming, refinement, specs",
+    name: "Refinement stays a conversation",
+    price: 20,
+    desc: "An agent drafts stories and the questions a senior engineer would ask before the meeting. Its output can't be the final artifact. The point of the meeting is shared understanding, not the document.",
+    summary: "AI is good at writing stories. That doesn't mean it should run refinement.",
+    impact: [
+      { role: "Engineering", text: "You walk into refinement with a draft to react to, not a blank page." },
+      { role: "PM", text: "The conversation still happens. The draft just saves you the first hour of it." },
+      { role: "QA", text: "You're asked to weigh in on a draft that already anticipated some of your questions." },
+    ],
+  },
+  {
+    id: "D09", section: "Pointing and sizing",
+    name: "Point by verification effort, not generation effort",
+    price: 20,
+    desc: "An agent finishes a ticket in ten minutes. The real cost is what's left for a human to verify. Point tickets by that, not by how long the code takes to write.",
+    summary: "Ask of each ticket: if the agent finishes this in ten minutes, what work is left? That's the real point value.",
+    impact: [
+      { role: "Engineering", text: "Your points reflect the work you actually do now, reviewing and verifying, not typing." },
+      { role: "PM", text: "Estimates get honest again instead of measuring a step that barely takes time anymore." },
+      { role: "QA", text: "Sizing finally accounts for the review and test burden, which is where your time actually goes." },
+    ],
+  },
+  {
+    id: "D10", section: "Pointing and sizing",
+    name: "Size tickets to one verification session",
+    price: 20,
+    desc: "Old rule: a ticket fits one to three days of typing. New rule: a ticket fits one verification session, 30 minutes to two hours of focused review.",
+    summary: "The trap is splitting tickets the old way, by perceived complexity, instead of the new way, by verification surface.",
+    impact: [
+      { role: "Engineering", text: "Tickets stay reviewable in one sitting instead of sprawling across files." },
+      { role: "PM", text: "Smaller, more predictable units make sprint planning less of a guessing game." },
+      { role: "QA", text: "A ticket you can verify in one sitting is a ticket you can actually finish verifying." },
+    ],
+  },
+  {
+    id: "D11", section: "Pointing and sizing",
+    name: "Skill telemetry in report cards",
+    price: 30,
+    desc: "Log every skill invocation per engineer and surface a PR-per-token ratio, so managers can coach AI usage as a skill instead of hoping it's happening.",
+    summary: "Spend alone isn't a signal. This gives managers something concrete to coach against.",
+    impact: [
+      { role: "Engineering", text: "Your AI usage becomes visible and improvable, not invisible until someone asks." },
+      { role: "PM", text: "You get a read on which teams are actually getting leverage from AI." },
+      { role: "QA", text: "The same telemetry pattern could extend to your workflows later." },
+    ],
+  },
+  {
+    id: "D12", section: "Standup",
+    name: "Automated daily standup digest",
+    price: 30,
+    desc: "Posts every weekday morning to the engineering channel, pulling standup notes and ticket and PR activity to flag stuck blockers, rotting PRs, and unassigned high-priority items automatically.",
+    summary: "Removes the manual compiling and catches what a live standup usually misses.",
+    impact: [
+      { role: "Engineering", text: "You see what's actually stuck without waiting for someone to say it out loud." },
+      { role: "PM", text: "Blockers surface automatically instead of depending on someone remembering to mention them." },
+      { role: "QA", text: "Stalled tickets show up before they become a surprise at sprint end." },
+    ],
+  },
+  {
+    id: "D13", section: "Standup",
+    name: "A third standup question: what's queued for review",
+    price: 10,
+    desc: "The old standup question assumed the bottleneck was work in progress. It's moved to the review queue. Add: what's queued for review, what am I reviewing, what's blocked on someone else's review.",
+    summary: "No template change required. Just ask it tomorrow.",
+    impact: [
+      { role: "Engineering", text: "The actual bottleneck, your review queue, gets named out loud instead of hiding." },
+      { role: "PM", text: "You see where work is really stuck, which is rarely in progress anymore." },
+      { role: "QA", text: "Verification work in flight becomes visible alongside everything else." },
+    ],
+  },
+  {
+    id: "D14", section: "Standup",
+    name: "Cap WIP by review capacity, not ticket count",
+    price: 20,
+    desc: "One engineer can run five agent threads but can't have five things in active human review at once. The limit should apply to the review queue, not the ticket count.",
+    summary: "WIP limits made sense when typing was the bottleneck. Now the bottleneck is attention.",
+    impact: [
+      { role: "Engineering", text: "You stop context-switching across five open reviews at once." },
+      { role: "PM", text: "Throughput problems that were hiding in the review queue become visible and fixable." },
+      { role: "QA", text: "Fewer half-reviewed things piling up before they reach you." },
+    ],
+  },
+  {
+    id: "D15", section: "Code review",
+    name: "AI adversarial review before human review",
+    price: 30,
+    desc: "Any agent-generated PR gets an AI review first, in a fresh session that never saw the original build conversation and is explicitly prompted to argue against the change. A human reads the diff against the acceptance criteria second.",
+    summary: "A model reviewing its own recent work defends its own decisions. A fresh, adversarial pass doesn't.",
+    impact: [
+      { role: "Engineering", text: "You get a real second opinion before a human ever looks at the diff." },
+      { role: "PM", text: "Fewer issues make it all the way to human review, so review moves faster." },
+      { role: "QA", text: "Problems get caught closer to the source instead of showing up in your test pass." },
+    ],
+  },
+  {
+    id: "D16", section: "Code review",
+    name: "No direct edits that bypass the design doc",
+    price: 20,
+    desc: "To fix something: describe the issue, update the design doc, regenerate the code. Any emergency direct edit gets logged and folded back into the doc.",
+    summary: "Keeps the doc and the code from drifting apart.",
+    impact: [
+      { role: "Engineering", text: "The design doc stays the source of truth instead of going stale the first week." },
+      { role: "PM", text: "Specs stay trustworthy, so you're not chasing what actually got built." },
+      { role: "QA", text: "You can verify against a doc that still matches the code." },
+    ],
+  },
+  {
+    id: "D17", section: "Code review",
+    name: "Pre-merge bot enforces the review policy automatically",
+    price: 40,
+    desc: "Checks for an eval set, a substantive AI review comment, and a human peer review before it lets a merge through, so the policy isn't just a suggestion people forget under deadline pressure.",
+    summary: "Makes the review policy structural instead of a norm people forget under a deadline.",
+    impact: [
+      { role: "Engineering", text: "You can't accidentally skip a step, even when you're rushing." },
+      { role: "PM", text: "The review bar holds even during crunch, without you having to police it." },
+      { role: "QA", text: "Every merge you see already cleared the same minimum bar, no exceptions." },
+    ],
+  },
+  {
+    id: "D25", section: "Testing and CI hygiene",
+    name: "Agents fix their own flaky tests",
+    price: 30,
+    desc: "When a test flakes, an agent investigates the failure, fixes the root cause or quarantines the test with a linked ticket, and opens a PR, instead of someone eyeballing a red build and hitting rerun.",
+    summary: "Flaky tests erode trust in the pipeline faster than almost anything else. This keeps the erosion from happening quietly.",
+    impact: [
+      { role: "Engineering", text: "You stop losing twenty minutes to a test that fails for no reason you can find." },
+      { role: "PM", text: "The pipeline stays a signal you can actually trust, instead of noise everyone's learned to ignore." },
+      { role: "QA", text: "Flaky tests get triaged and fixed continuously, instead of piling up until someone finally runs a cleanup sprint." },
+    ],
+  },
+  {
+    id: "D18", section: "PR review at scale",
+    name: "Risk-based scoring plus auto-merge the safest tier",
+    price: 50,
+    desc: "Score every PR by risk. Auto-merge the safest tier behind an adversarial AI review, no human required.",
+    summary: "The volume of AI-generated PRs has already outpaced what manual review can absorb. This is the core move.",
+    impact: [
+      { role: "Engineering", text: "Low-risk changes stop waiting in a human review queue." },
+      { role: "PM", text: "Throughput goes up without lowering the bar on what actually matters." },
+      { role: "QA", text: "Your attention gets freed up for the changes that are actually risky." },
+    ],
+  },
+  {
+    id: "D19", section: "PR review at scale",
+    name: "Human review reserved for auth, billing, and wide blast radius",
+    price: 20,
+    desc: "The flip side of auto-merge: anything touching auth, billing, or wide blast radius always gets a human, no exceptions.",
+    summary: "Automation earns trust by being strict about where it doesn't apply.",
+    impact: [
+      { role: "Engineering", text: "You know exactly which changes will always get a second set of human eyes." },
+      { role: "PM", text: "The riskiest categories of work keep the highest bar, by design." },
+      { role: "QA", text: "Your review time concentrates where a mistake would actually hurt." },
+    ],
+  },
+  {
+    id: "D20", section: "PR review at scale",
+    name: "Feature flags on every release",
+    price: 30,
+    desc: "A real release process starts here. Every release ships behind a flag.",
+    summary: "Table stakes for everything else in this section to work safely.",
+    impact: [
+      { role: "Engineering", text: "You can ship without betting the whole release on one change working perfectly." },
+      { role: "PM", text: "Rollback becomes a flag flip, not an incident." },
+      { role: "QA", text: "You can test in production behind a flag before it's fully live." },
+    ],
+  },
+  {
+    id: "D21", section: "PR review at scale",
+    name: "Canary rollout through defined tiers",
+    price: 40,
+    desc: "Anything auto-merged or freshly reviewed rolls out through defined tiers before it reaches full production.",
+    summary: "Catches what slips through review before it reaches everyone.",
+    impact: [
+      { role: "Engineering", text: "A bad change hits a small tier first, not your whole customer base." },
+      { role: "PM", text: "Incidents shrink in blast radius before anyone outside eng notices." },
+      { role: "QA", text: "Real production behavior gets validated in stages instead of all at once." },
+    ],
+  },
+  {
+    id: "D22", section: "PR review at scale",
+    name: "Continuous synthetic testing in production",
+    price: 40,
+    desc: "Synthetic checks run continuously in production to catch what canary and review both missed.",
+    summary: "The safety net underneath the safety net.",
+    impact: [
+      { role: "Engineering", text: "You find out about a regression from a synthetic check, not a customer." },
+      { role: "PM", text: "Confidence in the release process goes up because there's a real backstop." },
+      { role: "QA", text: "Coverage extends into production, past what your test pass could reach." },
+    ],
+  },
+  {
+    id: "D23", section: "PR review at scale",
+    name: "Swarm protocol when canary or synthetic tests catch a regression",
+    price: 30,
+    desc: "When canary or synthetic testing catches a regression, a defined protocol pulls engineers in immediately to fix or roll back, instead of waiting for someone to notice.",
+    summary: "The alert is only as good as what happens in the next five minutes after it fires.",
+    impact: [
+      { role: "Engineering", text: "A clear protocol means you're not guessing who's supposed to respond." },
+      { role: "PM", text: "Regressions get contained fast instead of festering while people figure out ownership." },
+      { role: "QA", text: "You see exactly how caught regressions get resolved, closing the loop." },
+    ],
+  },
+];
+
+// === Atoms ============================================================
+
+const Field = ({ label, help, error, htmlFor, children }) => html`
+  <div>
+    <label class="field-label" for=${htmlFor}>${label}</label>
+    ${children}
+    ${help && !error && html`<div class="field-help">${help}</div>`}
+    ${error && html`<div class="field-err">${error}</div>`}
+  </div>
+`;
+
+const Input = ({ id, value, onInput, placeholder, invalid }) => html`
+  <input
+    id=${id}
+    class="control"
+    type="text"
+    value=${value}
+    onInput=${onInput}
+    placeholder=${placeholder}
+    aria-invalid=${invalid ? "true" : "false"}
+  />
+`;
+
+const Select = ({ id, value, onChange, options, invalid }) => html`
+  <select
+    id=${id}
+    class="control"
+    value=${value}
+    onChange=${onChange}
+    aria-invalid=${invalid ? "true" : "false"}
+  >
+    ${options.map(o => html`<option key=${o.value} value=${o.value}>${o.label}</option>`)}
+  </select>
+`;
+
+const Textarea = ({ id, value, onInput, placeholder, rows = 3 }) => html`
+  <textarea
+    id=${id}
+    class="control"
+    rows=${rows}
+    value=${value}
+    onInput=${onInput}
+    placeholder=${placeholder}
+  ></textarea>
+`;
+
+const Button = ({ type = "button", variant = "primary", onClick, disabled, children }) => html`
+  <button type=${type} class=${`btn btn-${variant}`} onClick=${onClick} disabled=${disabled}>
+    ${children}
+  </button>
+`;
+
+const Pill = ({ tone = "default", children }) => html`
+  <span class="pill" data-tone=${tone}>${children}</span>
+`;
+
+// === Molecule =========================================================
+
+const BetCard = ({ bet, count, canAdd, isOpen, onAdd, onRemove, onToggleExpand }) => {
+  const picked = count > 0;
+  const addDisabled = !canAdd;
+  return html`
+  <li
+    class="card"
+    data-picked=${picked ? "true" : "false"}
+    data-disabled=${!picked && addDisabled ? "true" : "false"}
+  >
+    <div
+      class=${`flex items-start justify-between gap-4 ${!picked && addDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+      onClick=${() => canAdd && onAdd()}
+      role="button"
+      aria-pressed=${picked}
+      aria-disabled=${!picked && addDisabled}
+    >
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="id-chip">${bet.id}</span>
+          <span class="t-h4">${bet.name}</span>
+        </div>
+        <p class="t-bodySm">${bet.desc}</p>
+      </div>
+      <div class="text-right shrink-0 flex flex-col items-end gap-2">
+        <div class="price-num">$${bet.price}</div>
+        ${picked
+          ? html`
+            <div class="stepper" onClick=${(e) => e.stopPropagation()}>
+              <button type="button" onClick=${onRemove} aria-label="Remove one unit">−</button>
+              <span class="count">${count}</span>
+              <button type="button" onClick=${onAdd} disabled=${addDisabled} aria-label="Add one unit">+</button>
+            </div>
+          `
+          : html`
+            <${Pill} tone="default">
+              ${addDisabled ? "Over budget" : "Tap to pick"}
+            <//>
+          `}
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="learn-more"
+      onClick=${(e) => { e.stopPropagation(); onToggleExpand(); }}
+      aria-expanded=${isOpen}
+    >
+      ${isOpen ? "Hide details" : "Learn more"}
+    </button>
+
+    ${isOpen && html`
+      <div class="why-block">
+        ${bet.summary && html`
+          <div style=${{ marginBottom: '20px' }}>
+            <div class="micro" style=${{ marginBottom: '8px' }}>The bet</div>
+            <p class="t-bodySm">${bet.summary}</p>
+          </div>
+        `}
+        <div>
+          <div class="micro" style=${{ marginBottom: '12px' }}>Why this matters to you</div>
+          <ul class="space-y-3">
+            ${bet.impact.map(im => html`
+              <li>
+                <div class="t-bodySm" style=${{ color: 'var(--text)', fontWeight: 500 }}>${im.role}</div>
+                <div class="t-bodySm">${im.text}</div>
+              </li>
+            `)}
+          </ul>
+        </div>
+      </div>
+    `}
+  </li>
+`;
+};
+
+// === Screen ===========================================================
+
+function AIDLCVote() {
+  const [step, setStep] = useState("identify");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [picks, setPicks] = useState(() => ({})); // { [betId]: count }
+  const [expanded, setExpanded] = useState(() => new Set());
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const spent = useMemo(
+    () => BETS.reduce((s, b) => s + (picks[b.id] || 0) * b.price, 0),
+    [picks]
+  );
+  const remaining = BUDGET - spent;
+  const totalUnits = useMemo(
+    () => Object.values(picks).reduce((s, c) => s + c, 0),
+    [picks]
+  );
+  const uniqueBets = useMemo(
+    () => Object.values(picks).filter(c => c > 0).length,
+    [picks]
+  );
+
+  function add(bet) {
+    if (spent + bet.price > BUDGET) return;
+    setPicks({ ...picks, [bet.id]: (picks[bet.id] || 0) + 1 });
+  }
+
+  function remove(bet) {
+    const current = picks[bet.id] || 0;
+    if (current <= 0) return;
+    const next = { ...picks };
+    if (current === 1) delete next[bet.id]; else next[bet.id] = current - 1;
+    setPicks(next);
+  }
+
+  function toggleExpand(id) {
+    const next = new Set(expanded);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setExpanded(next);
+  }
+
+  async function submit() {
+    setError("");
+    if (!name.trim() || !role.trim()) { setError("Add your name and role to submit."); return; }
+    if (totalUnits === 0) { setError("Pick at least one bet."); return; }
+    setSubmitting(true);
+    const payload = {
+      voter: name.trim(),
+      role: role.trim(),
+      picks: BETS
+        .filter(b => (picks[b.id] || 0) > 0)
+        .map(b => ({ id: b.id, name: b.name, section: b.section, price: b.price, count: picks[b.id], subtotal: picks[b.id] * b.price })),
+      spent,
+      note: note.trim(),
+      submitted_at: new Date().toISOString(),
+    };
+    try {
+      await fetch(ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload),
+      });
+      setSubmitted(true);
+    } catch (e) {
+      setError("Couldn't submit. Try again, or screenshot your picks and send them to Sam.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (submitted) {
+    return html`
+      <div class="max-w-2xl mx-auto px-6 py-24">
+        <div class="micro" style=${{ marginBottom: '12px' }}>Vote in</div>
+        <h1 class="t-h1" style=${{ marginBottom: '24px' }}>Thanks, ${name.split(" ")[0]}.</h1>
+        <div class="hair" style=${{ marginBottom: '24px' }}></div>
+        <p class="t-body" style=${{ marginBottom: '8px' }}>Your picks are logged. Sam has them.</p>
+        <p class="t-bodySm" style=${{ color: 'var(--muted)' }}>You spent $${spent} of $${BUDGET} across ${uniqueBets} bet${uniqueBets === 1 ? "" : "s"} (${totalUnits} unit${totalUnits === 1 ? "" : "s"}).</p>
+      </div>
+    `;
+  }
+
+  let lastSection = null;
+
+  return html`
+    <div class="max-w-3xl mx-auto px-6 py-16">
+      <header class="mb-8">
+        <div class="micro" style=${{ marginBottom: '12px' }}>Engineering, PM & QA only</div>
+        <h1 class="t-h1" style=${{ marginBottom: '16px' }}>The AI-DLC Bang for the Buck</h1>
+        <p class="t-body" style=${{ maxWidth: '34rem', marginBottom: '12px' }}>
+          This isn't the company-wide bang for the buck you've seen before. This one's just
+          for us: the actual mechanics of how we plan, point, review, and ship software.
+          You have <span class="price-num">$${BUDGET}</span> to spend on how we change our
+          ceremonies for the AI era. Each bet is priced by the effort to ship it. Whatever
+          gets the most votes, we try, and we set goals to check against later.
+        </p>
+        <p class="t-bodySm" style=${{ maxWidth: '34rem', color: 'var(--muted)' }}>
+          Sam will see who voted. How you voted stays between you and him.
+        </p>
+      </header>
+
+      <div class="hair" style=${{ marginBottom: '32px' }}></div>
+
+      ${step === "identify" && html`
+        <section>
+          <div class="micro" style=${{ marginBottom: '20px' }}>Who's voting</div>
+          <div class="space-y-5" style=${{ marginBottom: '32px' }}>
+            <${Field} label="Your name" htmlFor="voter-name">
+              <${Input} id="voter-name" value=${name} onInput=${e => setName(e.target.value)} />
+            <//>
+            <${Field} label="Your role" htmlFor="voter-role">
+              <${Select}
+                id="voter-role"
+                value=${role}
+                onChange=${e => setRole(e.target.value)}
+                options=${[
+                  { value: "", label: "Pick one" },
+                  { value: "Engineering", label: "Engineering" },
+                  { value: "PM", label: "PM" },
+                  { value: "QA", label: "QA" },
+                  { value: "EM", label: "Engineering Manager" },
+                  { value: "Other", label: "Other" },
+                ]}
+              />
+            <//>
+          </div>
+          <${Button} onClick=${() => setStep("vote")} disabled=${!name.trim() || !role.trim()}>
+            Start voting
+          <//>
+        </section>
+      `}
+
+      ${step === "vote" && html`
+        <section>
+          <div class="sticky-bar -mx-6 px-6 py-4 mb-6 flex items-baseline justify-between">
+            <div>
+              <div class="micro" style=${{ marginBottom: '4px' }}>Remaining</div>
+              <div class="price-num-lg">$${remaining}</div>
+            </div>
+            <div class="t-bodySm" style=${{ color: 'var(--muted)' }}>
+              ${uniqueBets} bet${uniqueBets === 1 ? "" : "s"} · ${totalUnits} unit${totalUnits === 1 ? "" : "s"} · $${spent} spent
+            </div>
+          </div>
+
+          <p class="t-bodySm" style=${{ color: 'var(--muted)', marginBottom: '16px' }}>
+            Tip: you can double down. Tap a bet twice to put two units on it, three times for three, and so on.
+          </p>
+
+          <ul class="space-y-3" style=${{ marginBottom: '32px' }}>
+            ${BETS.map(b => {
+              const header = b.section !== lastSection;
+              lastSection = b.section;
+              return html`
+                ${header && html`<li class="section-head" key=${`h-${b.section}`}>${b.section}</li>`}
+                <${BetCard}
+                  key=${b.id}
+                  bet=${b}
+                  count=${picks[b.id] || 0}
+                  canAdd=${b.price <= remaining}
+                  isOpen=${expanded.has(b.id)}
+                  onAdd=${() => add(b)}
+                  onRemove=${() => remove(b)}
+                  onToggleExpand=${() => toggleExpand(b.id)}
+                />
+              `;
+            })}
+          </ul>
+
+          <div style=${{ marginBottom: '24px' }}>
+            <${Field}
+              label="Anything to add"
+              help="Why these bets, what's missing, what you'd push back on. Optional."
+              htmlFor="voter-note"
+            >
+              <${Textarea}
+                id="voter-note"
+                value=${note}
+                onInput=${e => setNote(e.target.value)}
+                rows=${3}
+              />
+            <//>
+          </div>
+
+          ${error && html`<div class="field-err" style=${{ marginBottom: '16px' }}>${error}</div>`}
+
+          <div class="flex items-center gap-2">
+            <${Button} onClick=${submit} disabled=${submitting || totalUnits === 0}>
+              ${submitting ? "Submitting…" : "Submit vote"}
+            <//>
+            <${Button} variant="tertiary" onClick=${() => setStep("identify")}>
+              Back
+            <//>
+          </div>
+        </section>
+      `}
+
+      <footer style=${{ marginTop: '80px', paddingTop: '24px', borderTop: '1px solid var(--hair)' }}>
+        <div class="t-caption">The AI-DLC Bang for the Buck · Engineering, PM & QA only · One vote per person.</div>
+      </footer>
+    </div>
+  `;
+}
+
+render(html`<${AIDLCVote} />`, document.getElementById('root'));
+</script>
+</body>
+</html>
