@@ -120,6 +120,7 @@
   .btn-tertiary:hover { color: var(--text); }
 
   .card {
+    position: relative;
     background: var(--bg);
     border: 1px solid var(--hair);
     border-radius: var(--r-md);
@@ -212,46 +213,45 @@
 
   .sticky-bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--hair); }
 
-  /* A blueprint grid, invisible except where the cursor uncovers it in a soft circle. Pure decoration, no layout impact. */
-  #cursor-glow {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      linear-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 42px 42px,
-      linear-gradient(90deg, rgba(255, 255, 255, 0.16) 1px, transparent 1px) 0 0 / 42px 42px;
-    -webkit-mask-image: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), black 0%, black 30%, transparent 75%);
-    mask-image: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), black 0%, black 30%, transparent 75%);
+  /* Border beam: a thin ring of light that circles an element's border. Lives on
+     form fields (while focused) and bet cards (on hover or when picked). No ambient
+     page-wide effect, only shows where you're actually interacting. */
+  @property --beam-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
   }
-  #root { position: relative; z-index: 1; background: transparent; }
+  @keyframes beam-spin { to { --beam-angle: 360deg; } }
+
+  .beam-wrap { position: relative; display: block; border-radius: var(--r-xs); }
+  .beam-wrap::after,
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--beam-angle), transparent 0%, transparent 78%, rgba(255, 255, 255, 0.85) 90%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease-out;
+    animation: beam-spin 3s linear infinite;
+  }
+  .beam-wrap:focus-within::after { opacity: 1 !important; }
+  .card:hover::after,
+  .card[data-picked="true"]::after { opacity: 1 !important; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
-    #cursor-glow { display: none; }
+    .beam-wrap::after, .card::after { opacity: 0 !important; }
   }
 </style>
 </head>
 <body>
-<div id="cursor-glow"></div>
 <div id="root"></div>
-
-<script>
-  (function () {
-    var glow = document.getElementById('cursor-glow');
-    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduceMotion) return;
-    var raf = null;
-    window.addEventListener('mousemove', function (e) {
-      if (raf) return;
-      raf = requestAnimationFrame(function () {
-        glow.style.setProperty('--mx', e.clientX + 'px');
-        glow.style.setProperty('--my', e.clientY + 'px');
-        raf = null;
-      });
-    }, { passive: true });
-  })();
-</script>
 
 <script type="module">
 import { html, render, useState, useMemo } from 'https://esm.sh/htm/preact/standalone';
@@ -564,38 +564,44 @@ const Field = ({ label, help, error, htmlFor, children }) => html`
 `;
 
 const Input = ({ id, value, onInput, placeholder, invalid }) => html`
-  <input
-    id=${id}
-    class="control"
-    type="text"
-    value=${value}
-    onInput=${onInput}
-    placeholder=${placeholder}
-    aria-invalid=${invalid ? "true" : "false"}
-  />
+  <span class="beam-wrap">
+    <input
+      id=${id}
+      class="control"
+      type="text"
+      value=${value}
+      onInput=${onInput}
+      placeholder=${placeholder}
+      aria-invalid=${invalid ? "true" : "false"}
+    />
+  </span>
 `;
 
 const Select = ({ id, value, onChange, options, invalid }) => html`
-  <select
-    id=${id}
-    class="control"
-    value=${value}
-    onChange=${onChange}
-    aria-invalid=${invalid ? "true" : "false"}
-  >
-    ${options.map(o => html`<option key=${o.value} value=${o.value}>${o.label}</option>`)}
-  </select>
+  <span class="beam-wrap">
+    <select
+      id=${id}
+      class="control"
+      value=${value}
+      onChange=${onChange}
+      aria-invalid=${invalid ? "true" : "false"}
+    >
+      ${options.map(o => html`<option key=${o.value} value=${o.value}>${o.label}</option>`)}
+    </select>
+  </span>
 `;
 
 const Textarea = ({ id, value, onInput, placeholder, rows = 3 }) => html`
-  <textarea
-    id=${id}
-    class="control"
-    rows=${rows}
-    value=${value}
-    onInput=${onInput}
-    placeholder=${placeholder}
-  ></textarea>
+  <span class="beam-wrap">
+    <textarea
+      id=${id}
+      class="control"
+      rows=${rows}
+      value=${value}
+      onInput=${onInput}
+      placeholder=${placeholder}
+    ></textarea>
+  </span>
 `;
 
 const Button = ({ type = "button", variant = "primary", onClick, disabled, children }) => html`
