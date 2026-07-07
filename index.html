@@ -690,6 +690,29 @@ const BetCard = ({ bet, count, canAdd, isOpen, onAdd, onRemove, onToggleExpand }
 `;
 };
 
+// Fisher-Yates, doesn't mutate the input.
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Shuffles section order and bet order within each section, so nobody's
+// budget runs dry on the same items every time. Sections stay grouped
+// with headers, just not in a fixed sequence.
+function shuffleBets() {
+  const bySection = new Map();
+  for (const b of BETS) {
+    if (!bySection.has(b.section)) bySection.set(b.section, []);
+    bySection.get(b.section).push(b);
+  }
+  const sections = shuffle(Array.from(bySection.keys()));
+  return sections.flatMap(s => shuffle(bySection.get(s)));
+}
+
 // === Screen ===========================================================
 
 function AIDLCVote() {
@@ -702,6 +725,8 @@ function AIDLCVote() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+
+  const orderedBets = useMemo(() => shuffleBets(), []);
 
   const spent = useMemo(
     () => BETS.reduce((s, b) => s + (picks[b.id] || 0) * b.price, 0),
@@ -843,7 +868,7 @@ function AIDLCVote() {
           </p>
 
           <ul class="space-y-3" style=${{ marginBottom: '32px' }}>
-            ${BETS.map(b => {
+            ${orderedBets.map(b => {
               const header = b.section !== lastSection;
               lastSection = b.section;
               return html`
