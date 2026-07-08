@@ -213,35 +213,36 @@
 
   .sticky-bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--hair); }
 
-  /* Aurora glow: a soft blurred wash of warm light that pools under an element's
-     bottom edge and drifts slowly, like the beam reference. Lives on form fields
-     (while focused) and bet cards (on hover or when picked). No ambient page-wide
-     effect, only shows where you're actually interacting. */
-  @keyframes aurora-drift {
-    0%, 100% { transform: translateX(-6%) scaleX(0.92); }
-    50% { transform: translateX(6%) scaleX(1.08); }
+  /* Border beam: a thin ring of light that circles an element's border. Lives on
+     form fields (while focused) and bet cards (on hover or when picked). No ambient
+     page-wide effect, only shows where you're actually interacting. */
+  @property --beam-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
   }
+  @keyframes beam-spin { to { --beam-angle: 360deg; } }
 
   .beam-wrap { position: relative; display: block; border-radius: var(--r-xs); }
   .beam-wrap::after,
   .card::after {
     content: "";
     position: absolute;
-    left: 8%;
-    right: 8%;
-    bottom: -26px;
-    height: 22px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, #FFD166, #FF6A3D, #FF3D77, transparent);
-    filter: blur(12px);
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from var(--beam-angle), transparent 0%, transparent 76%, #FFD166 84%, #FF6A3D 90%, #FF3D77 96%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 320ms ease-out;
-    animation: aurora-drift 6s ease-in-out infinite;
+    transition: opacity 220ms ease-out;
+    animation: beam-spin 3s linear infinite;
   }
-  .beam-wrap:focus-within::after { opacity: 0.85 !important; }
+  .beam-wrap:focus-within::after { opacity: 1 !important; }
   .card:hover::after,
-  .card[data-picked="true"]::after { opacity: 0.7 !important; }
+  .card[data-picked="true"]::after { opacity: 1 !important; }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
