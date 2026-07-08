@@ -1,6 +1,6 @@
 # AI-DLC · Bang for the Buck
 
-A single-page voting site for engineering, PM, and QA only, separate from the company-wide bang for the buck. Each voter gets $100 to spend across 24 bets on how we change our agile ceremonies for the AI era. Submissions land in a Google Sheet only you can see.
+A single-page voting site for engineering, PM, and QA only, separate from the company-wide bang for the buck. Each voter gets $100 to spend across 20 bets on how we change our agile ceremonies for the AI era. Submissions land in a Google Sheet only you can see.
 
 ## What's here
 

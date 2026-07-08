@@ -310,18 +310,6 @@ const BETS = [
     ],
   },
   {
-    id: "D05", section: "Grooming, refinement, specs",
-    name: "AI interviews every ticket before work starts",
-    price: 40,
-    desc: "An agent with real repo access grills every ticket on scope, edge cases, and tradeoffs, and flags what it already sees coming in the codebase. Grooming stops being once a sprint and starts running constantly.",
-    summary: "Example: a add-CSV-export ticket comes back flagging three existing export patterns and asks which one to follow, before anyone writes code.",
-    impact: [
-      { role: "Engineering", text: "Ambiguity gets caught before you start building, not during code review." },
-      { role: "PM", text: "Your tickets get a second set of eyes automatically, without adding a meeting." },
-      { role: "QA", text: "Edge cases the ticket missed show up before the feature ships, not after." },
-    ],
-  },
-  {
     id: "D06", section: "Grooming, refinement, specs",
     name: "Whole-team elaboration on one big project",
     price: 30,
@@ -343,18 +331,6 @@ const BETS = [
       { role: "Engineering", text: "Less time writing boilerplate stories, more time on the shape of the epic." },
       { role: "PM", text: "You focus your energy on the map, not on typing out every leaf story." },
       { role: "QA", text: "Leaf stories inherit context from the shared map, so they're less likely to miss something." },
-    ],
-  },
-  {
-    id: "D08", section: "Grooming, refinement, specs",
-    name: "Refinement stays a conversation",
-    price: 20,
-    desc: "An agent drafts stories and the questions a senior engineer would ask before the meeting. Its output can't be the final artifact. The point of the meeting is shared understanding, not the document.",
-    summary: "AI is good at writing stories. That doesn't mean it should run refinement.",
-    impact: [
-      { role: "Engineering", text: "You walk into refinement with a draft to react to, not a blank page." },
-      { role: "PM", text: "The conversation still happens. The draft just saves you the first hour of it." },
-      { role: "QA", text: "You're asked to weigh in on a draft that already anticipated some of your questions." },
     ],
   },
   {
@@ -391,18 +367,6 @@ const BETS = [
       { role: "Engineering", text: "Your AI usage becomes visible and improvable, not invisible until someone asks." },
       { role: "PM", text: "You get a read on which teams are actually getting leverage from AI." },
       { role: "QA", text: "The same telemetry pattern could extend to your workflows later." },
-    ],
-  },
-  {
-    id: "D12", section: "Standup",
-    name: "Automated daily standup digest",
-    price: 30,
-    desc: "Posts every weekday morning to the engineering channel, pulling standup notes and ticket and PR activity to flag stuck blockers, rotting PRs, and unassigned high-priority items automatically.",
-    summary: "Removes the manual compiling and catches what a live standup usually misses.",
-    impact: [
-      { role: "Engineering", text: "You see what's actually stuck without waiting for someone to say it out loud." },
-      { role: "PM", text: "Blockers surface automatically instead of depending on someone remembering to mention them." },
-      { role: "QA", text: "Stalled tickets show up before they become a surprise at sprint end." },
     ],
   },
   {
@@ -475,18 +439,6 @@ const BETS = [
       { role: "Engineering", text: "You stop losing twenty minutes to a test that fails for no reason you can find." },
       { role: "PM", text: "The pipeline stays a signal you can actually trust, instead of noise everyone's learned to ignore." },
       { role: "QA", text: "Flaky tests get triaged and fixed continuously, instead of piling up until someone finally runs a cleanup sprint." },
-    ],
-  },
-  {
-    id: "D18", section: "PR review at scale",
-    name: "Risk-based scoring plus auto-merge the safest tier",
-    price: 50,
-    desc: "Score every PR by risk. Auto-merge the safest tier behind an adversarial AI review, no human required.",
-    summary: "The volume of AI-generated PRs has already outpaced what manual review can absorb. This is the core move.",
-    impact: [
-      { role: "Engineering", text: "Low-risk changes stop waiting in a human review queue." },
-      { role: "PM", text: "Throughput goes up without lowering the bar on what actually matters." },
-      { role: "QA", text: "Your attention gets freed up for the changes that are actually risky." },
     ],
   },
   {
